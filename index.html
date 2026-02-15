@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SME IT Strategic Health Check (50-Point)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .active-btn { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; }
+        .score-input:focus { border-color: #10b981; background-color: white; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 pb-20">
+
+    <!-- HEADER -->
+    <nav class="bg-slate-900 text-white py-8 px-8 sticky top-0 z-50 shadow-2xl border-b border-slate-700">
+        <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between items-center gap-8">
+            <div class="text-center xl:text-left">
+                <h1 class="text-3xl font-black tracking-tight leading-none italic text-emerald-400">IT Health Check</h1>
+                <p class="text-slate-400 text-xs mt-3 font-bold uppercase tracking-widest italic">Strategic SME Maturity Roadmap (50 Points)</p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-6">
+                <!-- Toggles -->
+                <div class="flex flex-col gap-2">
+                    <span class="text-[9px] font-black uppercase text-slate-500 tracking-widest text-center">Software Strategy</span>
+                    <div class="bg-slate-800 p-1 rounded-xl flex border border-slate-700">
+                        <button id="btn-inhouse" onclick="updateModel('inhouse')" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all active-btn">In-House Team</button>
+                        <button id="btn-outsourced" onclick="updateModel('outsourced')" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">Outsourced</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <span class="text-[9px] font-black uppercase text-slate-500 tracking-widest text-center">Compliance Jurisdiction</span>
+                    <div class="bg-slate-800 p-1 rounded-xl flex border border-slate-700">
+                        <button id="btn-us" onclick="updateRegion('US')" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all active-btn">🇺🇸 USA</button>
+                        <button id="btn-eu" onclick="updateRegion('EU')" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">🇪🇺 Europe</button>
+                    </div>
+                </div>
+
+                <!-- Scorebox -->
+                <div class="bg-emerald-500/10 border border-emerald-500/20 px-8 py-2 rounded-2xl text-center min-w-[160px]">
+                    <div id="grand-total" class="text-4xl font-black text-emerald-400 leading-none mono">0.0</div>
+                    <div class="text-[9px] font-black text-emerald-500/60 uppercase mt-2 tracking-tighter">Weighted Score / 50</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto mt-12 px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
+        <!-- SIDEBAR -->
+        <div class="lg:col-span-4">
+            <div id="status-card" class="bg-white p-8 rounded-[2.5rem] shadow-sm border-t-8 border-slate-200 sticky top-40 transition-all duration-500">
+                <h3 class="text-xs font-black text-slate-400 uppercase mb-2 tracking-widest italic text-center">Status</h3>
+                <div id="rank-label" class="text-3xl font-black text-center text-slate-300 uppercase italic">Incomplete</div>
+                
+                <div class="mt-8">
+                    <div class="flex justify-between text-[10px] font-black uppercase mb-1">
+                        <span class="text-slate-400">Total Capability</span>
+                        <span id="percent-display" class="text-slate-600 font-bold">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-slate-300 h-full w-0 transition-all duration-1000"></div>
+                    </div>
+                </div>
+
+                <button onclick="downloadPlan()" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl shadow-blue-200">
+                    <i data-lucide="file-text"></i>
+                    Get Action Plan
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN TABLES -->
+        <div class="lg:col-span-8 space-y-12" id="tables-container"></div>
+    </main>
+
+    <script>
+        let state = { model: 'inhouse', region: 'US', scores: {} };
+
+        const roadmap = [
+            {
+                name: "1. Business Alignment",
+                items: [
+                    { title: "Strategic Alignment", weight: 3.0, def: "IT goals directly support the CEO's top 3 business targets.", who: "IT Director & CEO", when: "Immediate (Q1)", how: "Review the company's annual goal doc and map every IT project to a business outcome.", link: "https://www.cio.com/article/230432/it-steering-committee-best-practices.html" },
+                    { title: "IT Roadmap", weight: 2.0, def: "A 24-month roadmap exists showing major tech changes and upgrades.", who: "IT Director", when: "Short-term (30 Days)", how: "Draft a visual timeline of software/hardware lifecycles and present it to leadership.", link: "https://en.wikipedia.org/wiki/Technology_roadmap" },
+                    { title: "Stakeholder Engagement", weight: 2.0, def: "Department heads are involved in tech planning and vendor choices.", who: "IT Director", when: "Quarterly", how: "Formalize an 'IT Steering Committee' with leaders from Sales, HR, and Finance.", link: "https://www.gartner.com/en/information-technology/glossary/it-steering-committee" },
+                    { title: "Cost vs. Value Wisdom", weight: 3.0, def: "We know our exact tech spend and ROI for all major subscriptions.", who: "IT Director & Finance", when: "Short-term (30 Days)", how: "Conduct a full SaaS audit to find overlapping tools and waste.", link: "https://www.itfinancialmanagement.com/what-is-itfm" }
+                ]
+            },
+            {
+                name: "2. Application & Development",
+                isDevDynamic: true,
+                items: {
+                    inhouse: [
+                        { title: "Modular Architecture", weight: 3.0, def: "Internal apps connect via secure APIs rather than manual data entry.", who: "Dev Lead", when: "Medium-term (90 Days)", how: "Identify manual data 'bridges' and replace them with automated API connections.", link: "https://www.mulesoft.com/resources/api/what-is-an-api" },
+                        { title: "Reusable Components", weight: 2.0, def: "Developers use standard blueprints so anyone can jump in and help.", who: "Dev Team", when: "Continuous", how: "Document a 'Standards Guide' for all coding projects.", link: "https://en.wikipedia.org/wiki/Code_reuse" },
+                        { title: "Agile Adoption", weight: 2.0, def: "IT uses sprints (Scrum/Kanban) so work is visible to everyone.", who: "IT Manager", when: "Short-term (30 Days)", how: "Move all project tracking into a shared board like Jira or Microsoft Planner.", link: "https://www.atlassian.com/agile" },
+                        { title: "CI/CD Pipelines", weight: 3.0, def: "Software updates are tested and pushed automatically and safely.", who: "DevOps Lead", when: "Medium-term (90 Days)", how: "Implement an automated pipeline (GitHub Actions or Azure DevOps).", link: "https://aws.amazon.com/devops/continuous-delivery/" }
+                    ],
+                    outsourced: [
+                        { title: "Vendor Technology Fit", weight: 3.0, def: "The partner's software is API-first and fits our long-term goals.", who: "IT Director", when: "Contract Renewal", how: "Vet all vendor technology stacks against your 2-year roadmap.", link: "https://en.wikipedia.org/wiki/Vendor_lock-in" },
+                        { title: "SLA & Quality Standards", weight: 2.0, def: "Contracts strictly define performance, uptime, and financial penalties.", who: "IT Director & Legal", when: "Immediate", how: "Audit current contracts for 'Service Level Agreements' (SLAs).", link: "https://en.wikipedia.org/wiki/Service-level_agreement" },
+                        { title: "Project Visibility", weight: 2.0, def: "We have real-time access to the vendor's task boards and progress.", who: "IT Director", when: "Immediate", how: "Require the vendor to grant access to their project management boards.", link: "https://www.cio.com/article/273523/outsourcing-vendor-management-best-practices.html" },
+                        { title: "Security Audits", weight: 3.0, def: "Vendor provides annual SOC2/Pentest reports for all managed code.", who: "IT Director", when: "Annually", how: "Establish a mandatory 'Third-Party Risk Management' file for every vendor.", link: "https://aws.amazon.com/compliance/soc-faqs/" }
+                    ]
+                }
+            },
+            {
+                name: "3. Data & Integration",
+                isRegionDynamic: true,
+                items: {
+                    US: [
+                        { title: "Privacy Compliance (NIST)", weight: 3.0, def: "Data handling follows CCPA/NIST standards for personal safety.", who: "IT Director", when: "Immediate", how: "Perform a gap analysis against the NIST Privacy Framework.", link: "https://www.nist.gov/privacy-framework" },
+                        { title: "Data Governance", weight: 3.0, def: "There are clear 'owners' responsible for data accuracy in each department.", who: "Dept Heads", when: "Short-term (60 Days)", how: "Appoint a data steward for Sales, Finance, and HR.", link: "https://www.alation.com/blog/what-is-data-governance/" },
+                        { title: "Analytics Support", weight: 2.0, def: "Leaders use live BI dashboards to make company decisions.", who: "IT & Data Team", when: "Medium-term (90 Days)", how: "Connect your primary databases to a tool like PowerBI or Tableau.", link: "https://powerbi.microsoft.com/" },
+                        { title: "Integration Quality", weight: 2.0, def: "Systems are connected via secure APIs, not manual file uploads.", who: "Systems Admin", when: "Long-term (6 Months)", how: "Implement an iPaaS (Integration) tool to connect your SaaS stack.", link: "https://www.mulesoft.com/resources/api/what-is-an-api" }
+                    ],
+                    EU: [
+                        { title: "GDPR Compliance", weight: 3.0, def: "Handling Right-to-be-forgotten and data residency strictly.", who: "IT Director & DPO", when: "Immediate", how: "Audit your 'Data Processing Agreements' for all sub-processors.", link: "https://gdpr.eu/" },
+                        { title: "ISO 27001 Controls", weight: 3.0, def: "Data management follows the global gold-standard for security.", who: "IT Director", when: "Medium-term (90 Days)", how: "Map your current data controls to the ISO 27001 Annex A list.", link: "https://www.iso.org/iso-iec-27001-information-security.html" },
+                        { title: "Analytics Support", weight: 2.0, def: "Leaders use live BI dashboards to make company decisions.", who: "IT & Data Team", when: "Medium-term (90 Days)", how: "Implement live dashboards for executive visibility.", link: "https://powerbi.microsoft.com/" },
+                        { title: "Integration Quality", weight: 2.0, def: "Systems are connected via secure APIs, not manual file uploads.", who: "Systems Admin", when: "Long-term (6 Months)", how: "Use secure APIs for cross-border data movements.", link: "https://www.mulesoft.com/resources/api/what-is-an-api" }
+                    ]
+                }
+            },
+            {
+                name: "4. Infrastructure & Security",
+                items: [
+                    { title: "Robust Infrastructure", weight: 3.0, def: "Tech is in the cloud (Azure/AWS) so it stays up even if the office fails.", who: "Systems Admin", when: "Medium-term (90 Days)", how: "Migrate legacy 'on-prem' servers to the cloud.", link: "https://aws.amazon.com/well-architected/" },
+                    { title: "Redundancy & Scalability", weight: 2.0, def: "There are no 'single points of failure' in our internet or power.", who: "IT Manager", when: "Short-term (30 Days)", how: "Add a secondary ISP/Internet connection for business continuity.", link: "https://en.wikipedia.org/wiki/High_availability" },
+                    { title: "Risk-Aligned Security", weight: 3.0, def: "We use 'FaceID/Fingerprint' logins that hackers can't spoof.", who: "All Staff", when: "Immediate", how: "Enable phishing-resistant MFA (Microsoft Authenticator/Okta).", link: "https://www.crowdstrike.com/cybersecurity-101/zero-trust-security/" },
+                    { title: "Observability (SIEM)", weight: 2.0, def: "Our systems automatically alert us if an intruder enters the network.", who: "IT & SOC", when: "Short-term (30 Days)", how: "Enable centralized security logging (Azure Sentinel/Splunk).", link: "https://azure.microsoft.com/en-us/products/microsoft-sentinel" }
+                ]
+            },
+            {
+                name: "5. Governance & Team",
+                items: [
+                    { title: "Defined Roles (RACI)", weight: 2.0, def: "Everyone knows exactly who manages every piece of tech.", who: "IT Director", when: "Short-term (30 Days)", how: "Create a 'Who-Does-What' matrix for all IT services.", link: "https://en.wikipedia.org/wiki/Responsibility_assignment_matrix" },
+                    { title: "Knowledge Mgmt (Wiki)", weight: 2.0, def: "Everything is written down so a new hire could take over tomorrow.", who: "IT Staff", when: "Immediate", how: "Start a searchable internal Wiki or documentation hub.", link: "https://www.writethedocs.org/guide/docs-as-code/" },
+                    { title: "Continuous Improvement", weight: 2.0, def: "We have meetings to prevent old tech mistakes from happening again.", who: "Full IT Team", when: "Post-Incident", how: "Institutionalize 'Post-Mortem' reviews for every IT outage.", link: "https://en.wikipedia.org/wiki/Continual_improvement_process" },
+                    { title: "Staff Development", weight: 2.0, def: "We spend money annually on IT training and certifications.", who: "IT Director", when: "Annual Budget", how: "Allocate specific training funds for every IT team member.", link: "https://www.comptia.org/blog/it-staff-training-benefits" }
+                ]
+            }
+        ];
+
+        function updateModel(m) { state.model = m; render(); }
+        function updateRegion(r) { state.region = r; render(); }
+        function handleInput(cName, iTitle, value) {
+            let score = parseFloat(value) || 0;
+            if (score > 10) score = 10;
+            state.scores[`${state.model}-${state.region}-${cName}-${iTitle}`] = score;
+            calculate();
+        }
+
+        function render() {
+            document.getElementById('btn-inhouse').className = state.model === 'inhouse' ? 'px-4 py-2 rounded-lg text-[10px] font-black uppercase active-btn' : 'px-4 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400';
+            document.getElementById('btn-outsourced').className = state.model === 'outsourced' ? 'px-4 py-2 rounded-lg text-[10px] font-black uppercase active-btn' : 'px-4 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400';
+            document.getElementById('btn-us').className = state.region === 'US' ? 'px-4 py-2 rounded-lg text-[10px] font-black uppercase active-btn' : 'px-4 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400';
+            document.getElementById('btn-eu').className = state.region === 'EU' ? 'px-4 py-2 rounded-lg text-[10px] font-black uppercase active-btn' : 'px-4 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400';
+
+            const container = document.getElementById('tables-container');
+            container.innerHTML = '';
+
+            roadmap.forEach((cat) => {
+                let items = cat.items;
+                if (cat.isDevDynamic) items = cat.items[state.model];
+                if (cat.isRegionDynamic) items = cat.items[state.region];
+
+                const section = document.createElement('div');
+                section.className = "bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden mb-10";
+                
+                let rows = items.map((item) => {
+                    const savedValue = state.scores[`${state.model}-${state.region}-${cat.name}-${item.title}`] || "";
+                    return `
+                        <div class="flex flex-col md:flex-row items-start md:items-center gap-6 group py-6 border-b border-slate-50 last:border-0 px-8">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">${item.title}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed mb-2 italic">${item.def}</p>
+                                <a href="${item.ref}" target="_blank" class="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline flex items-center gap-1">
+                                    Learn the standard <i data-lucide="external-link" class="w-2.5 h-2.5"></i>
+                                </a>
+                            </div>
+                            <div class="w-full md:w-32 flex flex-col gap-1">
+                                <span class="text-[9px] font-black text-slate-400 uppercase text-center">Score (1-10)</span>
+                                <input type="number" min="0" max="10" placeholder="0" value="${savedValue}"
+                                    oninput="handleInput('${cat.name}', '${item.title}', this.value)"
+                                    class="score-input w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-3 text-center font-black text-slate-800 outline-none transition-all">
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                section.innerHTML = `<div class="px-8 py-4 bg-slate-100 border-b border-slate-100 font-black text-slate-800 uppercase text-xs italic">${cat.name}</div><div class="px-0">${rows}</div>`;
+                container.appendChild(section);
+            });
+            lucide.createIcons();
+            calculate();
+        }
+
+        function calculate() {
+            let total = 0;
+            roadmap.forEach((cat) => {
+                let items = cat.items;
+                if (cat.isDevDynamic) items = cat.items[state.model];
+                if (cat.isRegionDynamic) items = cat.items[state.region];
+                items.forEach((item) => {
+                    const score = state.scores[`${state.model}-${state.region}-${cat.name}-${item.title}`] || 0;
+                    total += (score / 10) * item.weight;
+                });
+            });
+
+            document.getElementById('grand-total').innerText = total.toFixed(1);
+            const pct = (total / 50) * 100;
+            document.getElementById('percent-display').innerText = Math.round(pct) + "%";
+            document.getElementById('progress-bar').style.width = pct + "%";
+
+            const rank = document.getElementById('rank-label');
+            const box = document.getElementById('status-card');
+
+            if (total >= 41) { rank.innerText = "Modern"; box.style.borderTopColor = "#10b981"; rank.style.color = "#10b981"; }
+            else if (total >= 31) { rank.innerText = "Solid"; box.style.borderTopColor = "#3b82f6"; rank.style.color = "#3b82f6"; }
+            else if (total >= 16) { rank.innerText = "Moderate"; box.style.borderTopColor = "#f59e0b"; rank.style.color = "#f59e0b"; }
+            else if (total > 0) { rank.innerText = "At Risk"; box.style.borderTopColor = "#ef4444"; rank.style.color = "#ef4444"; }
+            else { rank.innerText = "Incomplete"; box.style.borderTopColor = "#cbd5e1"; rank.style.color = "#cbd5e1"; }
+        }
+
+        function downloadPlan() {
+            let total = document.getElementById('grand-total').innerText;
+            let rank = document.getElementById('rank-label').innerText;
+            
+            let html = `
+                <html><head><style>
+                    body { font-family: sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                    .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }
+                    .box { background: #f4f4f4; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+                    .item { margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
+                    .item h3 { margin-bottom: 5px; color: #2563eb; }
+                    .item span { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 10px; }
+                    .how { color: #059669; font-weight: bold; }
+                </style></head>
+                <body>
+                    <div class="header"><h1>IT Strategic Action Plan</h1><p>Maturity: ${rank} | Score: ${total}/50</p></div>
+                    <div class="box">This report identifies the highest impact actions needed to mature your IT operations based on current scores.</div>
+            `;
+
+            roadmap.forEach(cat => {
+                let items = cat.isDevDynamic ? cat.items[state.model] : (cat.isRegionDynamic ? cat.items[state.region] : cat.items);
+                items.forEach(item => {
+                    const score = state.scores[`${state.model}-${state.region}-${cat.name}-${item.title}`] || 0;
+                    if(score < 8) {
+                        html += `
+                        <div class="item">
+                            <span>Category: ${cat.name}</span>
+                            <h3>${item.title} (Score: ${score}/10)</h3>
+                            <p><strong>WHO:</strong> ${item.who} | <strong>WHEN:</strong> ${item.when}</p>
+                            <p class="how">HOW: ${item.how}</p>
+                            <p><strong>GUIDE:</strong> <a href="${item.link}">${item.link}</a></p>
+                        </div>`;
+                    }
+                });
+            });
+
+            html += "</body></html>";
+            const reportWindow = window.open("", "_blank");
+            reportWindow.document.write(html);
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>
